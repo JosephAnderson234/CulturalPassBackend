@@ -1,8 +1,9 @@
 package com.culturalpass.culturalpass;
 
-import com.culturalpass.culturalpass.Event.exception.EventAlreadyExistsException;
-import com.culturalpass.culturalpass.Event.exception.EventNotFoundException;
+import com.culturalpass.culturalpass.Event.exceptions.EventAlreadyExistsException;
+import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
 import com.culturalpass.culturalpass.Security.exceptions.*;
+import com.culturalpass.culturalpass.User.exceptions.UserAlreadyRegisteredException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -91,16 +92,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("timestamp", LocalDateTime.now());
-        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
-        error.put("error", "Error interno del servidor");
-        error.put("message", "Ha ocurrido un error inesperado");
-
-        return ResponseEntity.internalServerError().body(error);
-    }
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<Map<String, Object>> handleGenericException(Exception ex) {
+//        Map<String, Object> error = new HashMap<>();
+//        error.put("timestamp", LocalDateTime.now());
+//        error.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+//        error.put("error", "Error interno del servidor");
+//        error.put("message", "Ha ocurrido un error inesperado");
+//
+//        return ResponseEntity.internalServerError().body(error);
+//    }
 
     @ExceptionHandler(EventNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleEventNotFound(EventNotFoundException ex) {
@@ -119,6 +120,17 @@ public class GlobalExceptionHandler {
         error.put("timestamp", LocalDateTime.now());
         error.put("status", HttpStatus.CONFLICT.value());
         error.put("error", "Evento ya existe");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(UserAlreadyRegisteredException.class)
+    public ResponseEntity<Map<String, Object>> handleUserAlreadyRegistered(UserAlreadyRegisteredException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.CONFLICT.value());
+        error.put("error", "Usuario ya registrado en evento");
         error.put("message", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);

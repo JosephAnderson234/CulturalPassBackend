@@ -1,4 +1,4 @@
-package com.culturalpass.culturalpass.Event.exception;
+package com.culturalpass.culturalpass.Event.exceptions;
 
 public class EventAlreadyExistsException extends RuntimeException {
     public EventAlreadyExistsException(String message) {

@@ -2,9 +2,10 @@ package com.culturalpass.culturalpass.Event.domain;
 
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
-import com.culturalpass.culturalpass.Event.exception.EventAlreadyExistsException;
-import com.culturalpass.culturalpass.Event.exception.EventNotFoundException;
+import com.culturalpass.culturalpass.Event.exceptions.EventAlreadyExistsException;
+import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRepository;
+import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -52,6 +53,17 @@ public class EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
         eventRepository.delete(event);
+    }
+
+    public List<UserShortDto> getUsersByEvent(Long eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
+        return event.getRegisteredUsers().stream()
+                .map(user -> new UserShortDto(
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getEmail()))
+                .collect(Collectors.toList());
     }
 
     private EventResponseDto toDto(Event event) {

@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Inscripción a Evento</title>
+</head>
+<body>
+<h2 th:text="'¡Hola ' + ${name} + '!'" />
+<p>Te has inscrito exitosamente al evento: <strong th:text="${eventTitle}" /></p>
+<p>Fecha: <span th:text="${eventDate}" /></p>
+<p>Escanea este QR para validar tu inscripción:</p>
+<img src="cid:qrCode" alt="Código QR" />
+</body>
+</html>

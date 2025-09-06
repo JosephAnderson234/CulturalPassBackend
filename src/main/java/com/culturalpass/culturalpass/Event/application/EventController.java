@@ -3,12 +3,18 @@ package com.culturalpass.culturalpass.Event.application;
 import com.culturalpass.culturalpass.Event.domain.EventService;
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
+import com.culturalpass.culturalpass.EventRegistrationToken.domain.EventRegistrationToken;
+import com.culturalpass.culturalpass.EventRegistrationToken.infrastructure.EventRegistrationTokenRepository;
+import com.culturalpass.culturalpass.User.domain.UserService;
+import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/event")
@@ -17,14 +23,17 @@ public class EventController {
     @Autowired
     private EventService eventService;
 
+    @Autowired
+    private EventRegistrationTokenRepository eventRegistrationTokenRepository;
+
     @GetMapping
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<EventResponseDto> getEvent(@PathVariable Long id) {
-        return ResponseEntity.ok(eventService.getEventById(id));
+    @GetMapping("/{eventId}")
+    public ResponseEntity<EventResponseDto> getEvent(@PathVariable Long eventId) {
+        return ResponseEntity.ok(eventService.getEventById(eventId));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -34,15 +43,36 @@ public class EventController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{id}")
-    public ResponseEntity<EventResponseDto> updateEvent(@PathVariable Long id, @RequestBody EventRequestDto dto) {
-        return ResponseEntity.ok(eventService.updateEvent(id, dto));
+    @PutMapping("/{eventId}")
+    public ResponseEntity<EventResponseDto> updateEvent(@PathVariable Long eventId, @RequestBody EventRequestDto dto) {
+        return ResponseEntity.ok(eventService.updateEvent(eventId, dto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
-        eventService.deleteEvent(id);
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
+        eventService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{eventId}/participants")
+    public ResponseEntity<List<UserShortDto>> getUsersByEvent(@PathVariable Long eventId) {
+        List<UserShortDto> users = eventService.getUsersByEvent(eventId);
+        return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/event/validate")
+    public ResponseEntity<?> validateQr(@RequestParam String token) {
+        Optional<EventRegistrationToken> opt = eventRegistrationTokenRepository.findByToken(token);
+        if (opt.isEmpty()) return ResponseEntity.status(404).body("Token inválido");
+        EventRegistrationToken regToken = opt.get();
+        if (regToken.isValidated()) return ResponseEntity.status(409).body("Ya validado");
+
+        regToken.setValidated(true);
+        regToken.setValidatedAt(LocalDateTime.now());
+        eventRegistrationTokenRepository.save(regToken);
+
+        return ResponseEntity.ok("Validación exitosa para usuario " + regToken.getUser().getEmail());
     }
 }
