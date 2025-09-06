@@ -1,5 +1,7 @@
 package com.culturalpass.culturalpass;
 
+import com.culturalpass.culturalpass.Event.exception.EventAlreadyExistsException;
+import com.culturalpass.culturalpass.Event.exception.EventNotFoundException;
 import com.culturalpass.culturalpass.Security.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -98,5 +100,27 @@ public class GlobalExceptionHandler {
         error.put("message", "Ha ocurrido un error inesperado");
 
         return ResponseEntity.internalServerError().body(error);
+    }
+
+    @ExceptionHandler(EventNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleEventNotFound(EventNotFoundException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.BAD_REQUEST.value());
+        error.put("error", "Evento no encontrado");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(EventAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleEventAlreadyExists(EventAlreadyExistsException ex) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("timestamp", LocalDateTime.now());
+        error.put("status", HttpStatus.CONFLICT.value());
+        error.put("error", "Evento ya existe");
+        error.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 }

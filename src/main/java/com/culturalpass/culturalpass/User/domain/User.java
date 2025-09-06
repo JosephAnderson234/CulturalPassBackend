@@ -1,5 +1,6 @@
 package com.culturalpass.culturalpass.User.domain;
 
+import com.culturalpass.culturalpass.Event.domain.Event;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,6 +10,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 @Entity
 @Table(name = "users")
@@ -42,4 +45,7 @@ public class User {
     @Column(nullable = false, unique = true)
     @Pattern(regexp = "\\d{9,15}", message = "El celular debe tener entre 9 y 15 dígitos")
     private String cellphone;
+
+    @ManyToMany(mappedBy = "registeredUsers")
+    private List<Event> eventsRegistered;
 }
