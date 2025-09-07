@@ -1,6 +1,7 @@
 package com.culturalpass.culturalpass.Event.application;
 
 import com.culturalpass.culturalpass.Event.domain.EventService;
+import com.culturalpass.culturalpass.Event.domain.ImageService;
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
 import com.culturalpass.culturalpass.Event.domain.EventRegistrationToken;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,6 +25,9 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
+
+    @Autowired
+    private ImageService imageService;
 
     @GetMapping
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
@@ -49,6 +54,19 @@ public class EventController {
     @PostMapping
     public ResponseEntity<EventResponseDto> createEvent(@RequestBody EventRequestDto dto) {
         return ResponseEntity.ok(eventService.createEvent(dto));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/image/upload/{eventId}")
+    public ResponseEntity<String> uploadEventImage(
+            @PathVariable Long eventId,
+            @RequestParam("imageFile") MultipartFile imageFile) {
+        try {
+            String url = imageService.uploadEventImage(eventId, imageFile);
+            return ResponseEntity.ok(url);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
     }
 
     @PreAuthorize("hasRole('ADMIN')")

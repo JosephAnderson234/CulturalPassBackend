@@ -138,6 +138,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(BadImageUploadException.class)
+    public ResponseEntity<Map<String, Object>> handleBadImageUpload(BadImageUploadException ex) {
+        logger.warn("Bad image upload: {}", ex.getMessage());
+        Map<String, Object> error = createErrorResponse(HttpStatus.BAD_REQUEST, "Error al subir la imagen", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
+
     private Map<String, Object> createErrorResponse(HttpStatus status, String error, String message) {
         Map<String, Object> errorResponse = new HashMap<>();
         errorResponse.put("timestamp", LocalDateTime.now());

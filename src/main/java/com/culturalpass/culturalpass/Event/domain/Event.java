@@ -31,7 +31,7 @@ public class Event {
     private String description;
 
     @URL
-    private String imageUrl;
+    private String imageUrl = null;
 
     @NotNull
     private LocalDate startDate;
