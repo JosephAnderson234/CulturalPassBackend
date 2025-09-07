@@ -3,9 +3,8 @@ package com.culturalpass.culturalpass.Event.application;
 import com.culturalpass.culturalpass.Event.domain.EventService;
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
-import com.culturalpass.culturalpass.EventRegistrationToken.domain.EventRegistrationToken;
-import com.culturalpass.culturalpass.EventRegistrationToken.infrastructure.EventRegistrationTokenRepository;
-import com.culturalpass.culturalpass.User.domain.UserService;
+import com.culturalpass.culturalpass.Event.domain.EventRegistrationToken;
+import com.culturalpass.culturalpass.Event.infrastructure.EventRegistrationTokenRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +21,6 @@ public class EventController {
 
     @Autowired
     private EventService eventService;
-
-    @Autowired
-    private EventRegistrationTokenRepository eventRegistrationTokenRepository;
 
     @GetMapping
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
@@ -60,19 +56,5 @@ public class EventController {
     public ResponseEntity<List<UserShortDto>> getUsersByEvent(@PathVariable Long eventId) {
         List<UserShortDto> users = eventService.getUsersByEvent(eventId);
         return ResponseEntity.ok(users);
-    }
-
-    @PostMapping("/event/validate")
-    public ResponseEntity<?> validateQr(@RequestParam String token) {
-        Optional<EventRegistrationToken> opt = eventRegistrationTokenRepository.findByToken(token);
-        if (opt.isEmpty()) return ResponseEntity.status(404).body("Token inválido");
-        EventRegistrationToken regToken = opt.get();
-        if (regToken.isValidated()) return ResponseEntity.status(409).body("Ya validado");
-
-        regToken.setValidated(true);
-        regToken.setValidatedAt(LocalDateTime.now());
-        eventRegistrationTokenRepository.save(regToken);
-
-        return ResponseEntity.ok("Validación exitosa para usuario " + regToken.getUser().getEmail());
     }
 }

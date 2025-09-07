@@ -4,6 +4,7 @@ import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
 import com.culturalpass.culturalpass.Event.exceptions.EventAlreadyExistsException;
 import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
+import com.culturalpass.culturalpass.Event.exceptions.MissingEventFieldException;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,9 +32,39 @@ public class EventService {
     }
 
     public EventResponseDto createEvent(EventRequestDto dto) {
+        StringBuilder missingFields = new StringBuilder();
+
+        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+            missingFields.append("title, ");
+        }
+        if (dto.getDescription() == null || dto.getDescription().isBlank()) {
+            missingFields.append("description, ");
+        }
+        if (dto.getStartDate() == null) {
+            missingFields.append("startDate, ");
+        }
+        if (dto.getEndDate() == null) {
+            missingFields.append("endDate, ");
+        }
+        if (dto.getLocation() == null || dto.getLocation().isBlank()) {
+            missingFields.append("location, ");
+        }
+        if (dto.getType() == null) {
+            missingFields.append("type, ");
+        }
+        if (dto.getStatus() == null) {
+            missingFields.append("status, ");
+        }
+
+        if (missingFields.length() > 0) {
+            String fields = missingFields.substring(0, missingFields.length() - 2);
+            throw new MissingEventFieldException("Faltan campos obligatorios: " + fields);
+        }
+
         if (eventRepository.existsByTitle(dto.getTitle())) {
             throw new EventAlreadyExistsException("Ya existe un evento con el título: " + dto.getTitle());
         }
+
         Event event = new Event();
         updateEventFromDto(event, dto, true);
         event.setRegisteredUsers(List.of());

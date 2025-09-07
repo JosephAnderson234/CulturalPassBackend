@@ -15,7 +15,7 @@ import java.util.List;
 public class EventRequestDto {
     private String title;
     private String description;
-    private String imageUrl;
+    private String imageUrl; // Opcional
     private LocalDate startDate;
     private LocalDate endDate;
     private String location;

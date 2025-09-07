@@ -57,7 +57,6 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id")
     )
     @Column(name = "tag")
-    @Size(min = 1, message = "El evento debe tener al menos un tag")
     private List<String> tags;
 
     @ManyToMany

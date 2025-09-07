@@ -22,30 +22,47 @@ public class MailService {
     @Autowired
     private SpringTemplateEngine templateEngine;
 
-    @Async
-    public void sendHtmlMail(String to, String subject, String templateName, Map<String, Object> variables) throws MessagingException {
+    @Async("taskExecutor")
+    public void sendSimpleHtmlMail(String to, String subject, String templateName, Map<String, Object> variables) throws MessagingException {
         Context context = new Context();
         context.setVariables(variables);
-        String htmlContent = templateEngine.process(templateName + ".html", context);
+        String htmlContent = templateEngine.process(templateName, context);
         MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, "UTF-8");
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
         mailSender.send(message);
     }
 
-    @Async
-    public void sendHtmlMailWithAttachment(String to, String subject, String templateName, Map<String, Object> variables, byte[] qrCodeImage) throws MessagingException {
+    @Async("taskExecutor")
+    public void sendHtmlMailWithQR(String to, String subject, String templateName, Map<String, Object> variables, byte[] qrCodeImage) throws MessagingException {
         Context context = new Context();
         context.setVariables(variables);
-        String htmlContent = templateEngine.process("Rolled", context);
+        String htmlContent = templateEngine.process(templateName, context);
         MimeMessage message = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
         helper.setTo(to);
         helper.setSubject(subject);
         helper.setText(htmlContent, true);
-        helper.addAttachment("qr.png", new ByteArrayResource(qrCodeImage));
+        helper.addInline("qrCode", new ByteArrayResource(qrCodeImage), "image/png");
+        mailSender.send(message);
+    }
+
+    @Async("taskExecutor")
+    public void sendHtmlMailWithQRAndPDF(String to, String subject, String templateName,
+                                         Map<String, Object> variables, byte[] qrCodeImage,
+                                         byte[] pdfData, String pdfFileName) throws MessagingException {
+        Context context = new Context();
+        context.setVariables(variables);
+        String htmlContent = templateEngine.process(templateName, context);
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+        helper.setTo(to);
+        helper.setSubject(subject);
+        helper.setText(htmlContent, true);
+        helper.addInline("qrCode", new ByteArrayResource(qrCodeImage), "image/png");
+        helper.addAttachment(pdfFileName, new ByteArrayResource(pdfData), "application/pdf");
         mailSender.send(message);
     }
 }

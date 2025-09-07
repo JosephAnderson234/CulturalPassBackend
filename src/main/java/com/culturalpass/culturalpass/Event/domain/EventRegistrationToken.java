@@ -1,6 +1,5 @@
-package com.culturalpass.culturalpass.EventRegistrationToken.domain;
+package com.culturalpass.culturalpass.Event.domain;
 
-import com.culturalpass.culturalpass.Event.domain.Event;
 import com.culturalpass.culturalpass.User.domain.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

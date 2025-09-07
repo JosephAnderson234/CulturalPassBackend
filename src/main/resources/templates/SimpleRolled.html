@@ -99,36 +99,13 @@
             font-size: 14px;
         }
 
-        /* DISEÑO DE BOLETO */
-        .ticket {
+        .simple-ticket {
             background: white;
             margin: 25px 0;
             border-radius: 12px;
             overflow: hidden;
-            border: 2px dashed #CD853F;
-            position: relative;
+            border: 2px solid #CD853F;
             box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
-        }
-
-        .ticket::before,
-        .ticket::after {
-            content: '';
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #FFF8DC;
-            border-radius: 50%;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 2;
-        }
-
-        .ticket::before {
-            left: -10px;
-        }
-
-        .ticket::after {
-            right: -10px;
         }
 
         .ticket-header {
@@ -145,35 +122,46 @@
             text-align: center;
         }
 
-        .ticket-instruction {
+        .confirmation-message {
             color: #8B4513;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: bold;
             margin-bottom: 15px;
         }
 
-        .qr-container {
-            background: #F9F9F9;
+        .instruction-box {
+            background: #F0F8FF;
+            border: 2px dashed #4682B4;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .instruction-text {
+            color: #2F4F4F;
+            font-size: 16px;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        .contact-info {
+            background: #FFF8DC;
+            border: 1px solid #DAA520;
             padding: 15px;
             border-radius: 8px;
-            display: inline-block;
-            border: 1px solid #E0E0E0;
-            margin: 10px 0;
+            margin-top: 15px;
         }
 
-        .qr-container img {
-            display: block;
-            max-width: 180px;
-            height: auto;
+        .contact-info h4 {
+            color: #8B4513;
+            margin: 0 0 10px 0;
+            font-size: 14px;
         }
 
-        .ticket-footer {
-            background: #F5F5F5;
-            padding: 12px 20px;
-            text-align: center;
-            font-size: 12px;
+        .contact-info p {
             color: #666;
-            border-top: 1px solid #E0E0E0;
+            font-size: 12px;
+            margin: 5px 0;
         }
 
         .footer {
@@ -206,11 +194,6 @@
                 font-size: 20px;
             }
 
-            .cultural-icon {
-                width: 40px;
-                height: 40px;
-            }
-
             .header h1 {
                 font-size: 22px;
             }
@@ -239,25 +222,30 @@
             </div>
         </div>
 
-        <!-- BOLETO CON QR -->
-        <div class="ticket">
+        <div class="simple-ticket">
             <div class="ticket-header">
-                🎟️ BOLETO DE ENTRADA
+                🎟️ CONFIRMACIÓN DE INSCRIPCIÓN
             </div>
 
             <div class="ticket-content">
-                <div class="ticket-instruction">
-                    Presenta este código QR al personal<br>
-                    en la recepción del evento
+                <div class="confirmation-message">
+                    ¡Tu inscripción ha sido registrada exitosamente!
                 </div>
 
-                <div class="qr-container">
-                    <img src="cid:qrCode" alt="Código QR de Entrada" />
+                <div class="instruction-box">
+                    <p class="instruction-text">
+                        📋 <strong>Para ingresar al evento, solo necesitas:</strong><br>
+                        • Presentarte en la recepción con tu nombre<br>
+                        • Mostrar este correo de confirmación<br>
+                        • Tu documento de identidad
+                    </p>
                 </div>
-            </div>
 
-            <div class="ticket-footer">
-                Válido únicamente para el evento registrado • Conserva este boleto
+                <div class="contact-info">
+                    <h4>📞 ¿Tienes alguna consulta?</h4>
+                    <p>Contáctanos antes del evento si necesitas ayuda</p>
+                    <p><strong>Email:</strong> info@centroculturalballumbrosio.pe</p>
+                </div>
             </div>
         </div>
     </div>

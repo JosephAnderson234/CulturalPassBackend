@@ -1,27 +1,29 @@
 package com.culturalpass.culturalpass.Mail.domain;
 
 import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 
 public class QRCodeGenerator {
 
+    private static final Map<EncodeHintType, Object> HINTS = Map.of(
+            EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M,
+            EncodeHintType.CHARACTER_SET, "UTF-8"
+    );
+
     public static byte[] generateQRCodeImage(String text, int width, int height) throws Exception {
         QRCodeWriter qrCodeWriter = new QRCodeWriter();
-        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height);
+        BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, width, height, HINTS);
 
-        BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                int grayValue = (bitMatrix.get(x, y) ? 0 : 255);
-                int rgb = (grayValue << 16) | (grayValue << 8) | grayValue;
-                bufferedImage.setRGB(x, y, rgb);
-            }
-        }
+        BufferedImage bufferedImage = MatrixToImageWriter.toBufferedImage(bitMatrix);
 
         ByteArrayOutputStream pngOutputStream = new ByteArrayOutputStream();
         ImageIO.write(bufferedImage, "PNG", pngOutputStream);
