@@ -2,12 +2,18 @@ package com.culturalpass.culturalpass.Event.domain;
 
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
+import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
 import com.culturalpass.culturalpass.Event.exceptions.EventAlreadyExistsException;
 import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
 import com.culturalpass.culturalpass.Event.exceptions.MissingEventFieldException;
+import com.culturalpass.culturalpass.Event.exceptions.UserValidationException;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,6 +30,36 @@ public class EventService {
                 .map(this::toDto)
                 .collect(Collectors.toList());
     }
+
+    public PaginatedResponseDto<EventResponseDto> getAllEventsPaginated(int page, int size, String sortBy, String sortDir) {
+        if (page < 0) {
+            throw new UserValidationException("El número de página debe ser mayor o igual a 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new UserValidationException("El tamaño de página debe estar entre 1 y 100");
+        }
+        try {
+            Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sort = Sort.by(direction, sortBy);
+            Pageable pageable = PageRequest.of(page, size, sort);
+
+            Page<Event> eventPage = eventRepository.findAll(pageable);
+            List<EventResponseDto> content = eventPage.getContent().stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+
+            return PaginatedResponseDto.<EventResponseDto>builder()
+                    .content(content)
+                    .currentPage(eventPage.getNumber())
+                    .totalPages(eventPage.getTotalPages())
+                    .totalElements(eventPage.getTotalElements())
+                    .size(eventPage.getSize())
+                    .build();
+        } catch (Exception e) {
+            throw new UserValidationException("Parámetros de paginación inválidos: " + e.getMessage());
+        }
+    }
+
 
     public EventResponseDto getEventById(Long id) {
         Event event = eventRepository.findById(id)

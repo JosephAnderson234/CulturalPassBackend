@@ -4,9 +4,11 @@ import com.culturalpass.culturalpass.Event.domain.EventService;
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
 import com.culturalpass.culturalpass.Event.domain.EventRegistrationToken;
+import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRegistrationTokenRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +27,17 @@ public class EventController {
     @GetMapping
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
+    }
+
+    @GetMapping("/paginated")
+    public ResponseEntity<PaginatedResponseDto<EventResponseDto>> getAllEventsPaginated(
+            @RequestParam(defaultValue = "0") int currentPage,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+
+        PaginatedResponseDto<EventResponseDto> events = eventService.getAllEventsPaginated(currentPage, pageSize, sortBy, sortDir);
+        return ResponseEntity.ok(events);
     }
 
     @GetMapping("/{eventId}")
