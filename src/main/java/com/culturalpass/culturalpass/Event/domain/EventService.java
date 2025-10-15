@@ -31,6 +31,32 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
+    public PaginatedResponseDto<EventResponseDto> searchEventsPaginated(int page, int size, String term) {
+        if (page < 0) {
+            throw new UserValidationException("El número de página debe ser mayor o igual a 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new UserValidationException("El tamaño de página debe estar entre 1 y 100");
+        }
+        try {
+            Pageable pageable = PageRequest.of(page, size);
+            Page<Event> eventPage = eventRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(term, term, pageable);
+            List<EventResponseDto> content = eventPage.getContent().stream()
+                    .map(this::toDto)
+                    .collect(Collectors.toList());
+
+            return PaginatedResponseDto.<EventResponseDto>builder()
+                    .content(content)
+                    .currentPage(eventPage.getNumber())
+                    .totalPages(eventPage.getTotalPages())
+                    .totalElements(eventPage.getTotalElements())
+                    .size(eventPage.getSize())
+                    .build();
+        } catch (Exception e) {
+            throw new UserValidationException("Parámetros de paginación inválidos: " + e.getMessage());
+        }
+    }
+
     public PaginatedResponseDto<EventResponseDto> getAllEventsPaginated(int page, int size, String sortBy, String sortDir) {
         if (page < 0) {
             throw new UserValidationException("El número de página debe ser mayor o igual a 0");

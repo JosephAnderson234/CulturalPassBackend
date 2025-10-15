@@ -45,6 +45,15 @@ public class EventController {
         return ResponseEntity.ok(events);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<PaginatedResponseDto<EventResponseDto>> searchEvents(
+            @RequestParam(defaultValue = "0") int currentPage,
+            @RequestParam(defaultValue = "10") int pageSize,
+            @RequestParam String term
+    ) {
+        return ResponseEntity.ok(eventService.searchEventsPaginated(currentPage, pageSize, term));
+    }
+
     @GetMapping("/{eventId}")
     public ResponseEntity<EventResponseDto> getEvent(@PathVariable Long eventId) {
         return ResponseEntity.ok(eventService.getEventById(eventId));
