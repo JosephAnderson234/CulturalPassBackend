@@ -365,6 +365,53 @@
 					"response": []
 				},
 				{
+					"name": "Actualizar imagen de evento",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "imageFile",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/event/image/upload/:eventId",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"event",
+								"image",
+								"upload",
+								":eventId"
+							],
+							"variable": [
+								{
+									"key": "eventId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Actualizar evento",
 					"request": {
 						"auth": {
@@ -437,53 +484,6 @@
 								{
 									"key": "eventId",
 									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Actualizar imagen de evento",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{adminToken}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "imageFile",
-									"type": "file",
-									"src": []
-								}
-							]
-						},
-						"url": {
-							"raw": "{{baseUrl}}/api/event/image/upload/:eventId",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"event",
-								"image",
-								"upload",
-								":eventId"
-							],
-							"variable": [
-								{
-									"key": "eventId",
-									"value": "1"
 								}
 							]
 						}
@@ -720,6 +720,192 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Estadísticas",
+			"item": [
+				{
+					"name": "Usuarios inscritos en el mes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/statistics/monthly-users-enrolled?month=10&year=2025",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"statistics",
+								"monthly-users-enrolled"
+							],
+							"query": [
+								{
+									"key": "month",
+									"value": "10"
+								},
+								{
+									"key": "year",
+									"value": "2025"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eventos pendientes",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/statistics/pending-events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"statistics",
+								"pending-events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Eventos programados en el año",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/statistics/yearly-events?year=2025",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"statistics",
+								"yearly-events"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2025"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Recaudación mensual",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/statistics/monthly-revenue?month=10&year=2025",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"statistics",
+								"monthly-revenue"
+							],
+							"query": [
+								{
+									"key": "month",
+									"value": "10"
+								},
+								{
+									"key": "year",
+									"value": "2025"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Record diario de inscripciones",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/statistics/monthly-enrollment-record?month=10&year=2025",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"statistics",
+								"monthly-enrollment-record"
+							],
+							"query": [
+								{
+									"key": "month",
+									"value": "10"
+								},
+								{
+									"key": "year",
+									"value": "2025"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -747,30 +933,15 @@
 	"variable": [
 		{
 			"key": "baseUrl",
-			"value": "http://localhost:8080",
-			"type": "string",
-			"description": {
-				"content": "",
-				"type": "text/plain"
-			}
+			"value": "http://localhost:8080"
 		},
 		{
 			"key": "userToken",
-			"value": "",
-			"type": "string",
-			"description": {
-				"content": "",
-				"type": "text/plain"
-			}
+			"value": ""
 		},
 		{
 			"key": "adminToken",
-			"value": "",
-			"type": "string",
-			"description": {
-				"content": "",
-				"type": "text/plain"
-			}
+			"value": ""
 		}
 	]
 }

@@ -50,6 +50,15 @@ public class Event {
     @NotNull
     private EventStatus status;
 
+    @Column(nullable = false)
+    private Integer capacity = 0;
+
+    @Column(nullable = false)
+    private Double costEntry = 0.0;
+
+    @Column(nullable = false)
+    private Integer currentEnrollments = 0;
+
     @ElementCollection
     @CollectionTable(
             name = "event_tags",

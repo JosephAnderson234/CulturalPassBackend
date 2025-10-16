@@ -51,8 +51,11 @@ public class UserService {
         if (event.getRegisteredUsers().contains(user)) {
             throw new UserAlreadyRegisteredException("El usuario ya está inscrito en este evento.");
         }
+
         event.getRegisteredUsers().add(user);
+        event.setCurrentEnrollments(event.getCurrentEnrollments() + 1);
         eventRepository.save(event);
+
         String token = java.util.UUID.randomUUID().toString();
         EventRegistrationToken registrationToken = new EventRegistrationToken(token, user, event);
         eventRegistrationTokenRepository.save(registrationToken);

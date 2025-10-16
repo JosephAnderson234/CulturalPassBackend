@@ -2,6 +2,7 @@ package com.culturalpass.culturalpass;
 
 import com.culturalpass.culturalpass.Event.exceptions.*;
 import com.culturalpass.culturalpass.Security.exceptions.*;
+import com.culturalpass.culturalpass.Statistic.exceptions.InvalidDateRangeException;
 import com.culturalpass.culturalpass.User.exceptions.UserAlreadyRegisteredException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,7 +83,6 @@ public class GlobalExceptionHandler {
         if (logger.isDebugEnabled()) {
             logger.debug("Validation errors occurred: {}", ex.getMessage(), ex);
         }
-
         Map<String, String> validationErrors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((errorObj) -> {
             String fieldName = ((FieldError) errorObj).getField();
@@ -142,6 +142,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleBadImageUpload(BadImageUploadException ex) {
         logger.warn("Bad image upload: {}", ex.getMessage());
         Map<String, Object> error = createErrorResponse(HttpStatus.BAD_REQUEST, "Error al subir la imagen", ex.getMessage());
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(InvalidDateRangeException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidDateRange(InvalidDateRangeException ex) {
+        logger.info("Invalid date range for statistics: {}", ex.getMessage());
+        Map<String, Object> error = createErrorResponse(HttpStatus.BAD_REQUEST, "Rango de fecha inválido", ex.getMessage());
         return ResponseEntity.badRequest().body(error);
     }
 
