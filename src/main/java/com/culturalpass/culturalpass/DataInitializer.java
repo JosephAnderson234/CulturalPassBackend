@@ -50,5 +50,18 @@ public class DataInitializer {
         } else {
             System.out.println("Usuario administrador ya existe: " + adminEmail);
         }
+        if (!userRepository.existsByEmail("a@b.test")) {
+            User user = User.builder()
+                    .firstName("Usuario")
+                    .lastName("De Prueba")
+                    .email("a@b.test")
+                    .password(passwordEncoder.encode("123456789"))
+                    .role(UserRole.CLIENTE)
+                    .cellphone("600600600")
+                    .build();
+            userRepository.save(user);
+            System.out.println("Usuario de prueba creado: a@b.test");
+
+        }
     }
 }
