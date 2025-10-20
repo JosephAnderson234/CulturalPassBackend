@@ -31,7 +31,7 @@ public class EventInitializer {
                     .status(EventStatus.APERTURADO)
                     .currentEnrollments(0)
                     .capacity(500)
-                    .imageUrl("https://example.com/images/concierto_rock.jpg")
+                    .imageUrl("https://imgmedia.larepublica.pe/1000x590/larepublica/original/2025/10/17/68f30686b3f6c319b802ec28.webp")
                     .costEntry(30.0)
                     .build();
             eventRepository.save(event);
