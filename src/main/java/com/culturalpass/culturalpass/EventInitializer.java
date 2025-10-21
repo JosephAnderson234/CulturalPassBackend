@@ -23,9 +23,9 @@ public class EventInitializer {
                     .title("Concierto de Rock")
                     .description("Un emocionante concierto de rock con bandas locales.")
                     .location("Auditorio Nacional")
-                    // Tus campos: ojo que son LocalDate
-                    .startDate(LocalDate.of(2024, 9, 15))
-                    .endDate(LocalDate.of(2024, 9, 15))
+                    // Si quieres manejar segundos, usa LocalDateTime en vez de LocalDate
+                    .startDateTime(java.time.LocalDateTime.of(2025, 9, 22, 20, 0, 0)) // Ejemplo: 20:00:00
+                    .endDateTime(java.time.LocalDateTime.of(2025, 9, 22, 23, 0, 0))    // Ejemplo: 23:00:00
                     .tags(List.of("música", "concierto", "rock"))
                     .type(EventType.CONCIERTO)
                     .status(EventStatus.APERTURADO)
