@@ -10,7 +10,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -48,7 +47,7 @@ public class StatisticService {
     }
 
     public PendingEventsDto getPendingEvents() {
-        LocalDate today = LocalDate.now();
+        LocalDateTime today = LocalDateTime.now();
 
         long pendingEvents = eventRepository.findAll().stream()
                 .filter(event -> event.getEndDate().isAfter(today))
@@ -67,8 +66,8 @@ public class StatisticService {
             throw new InvalidDateRangeException("El año debe estar entre 1900 y 2100");
         }
 
-        LocalDate startOfYear = LocalDate.of(year, 1, 1);
-        LocalDate endOfYear = LocalDate.of(year, 12, 31);
+        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
+        LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59, 59);
 
         long totalEvents = eventRepository.findAll().stream()
                 .filter(event ->
@@ -89,8 +88,8 @@ public class StatisticService {
     public MonthlyRevenueDto getMonthlyRevenue(Integer month, Integer year) {
         validateMonthYear(month, year);
 
-        LocalDate startOfMonth = LocalDate.of(year, month, 1);
-        LocalDate endOfMonth = LocalDate.of(year, month, YearMonth.of(year, month).lengthOfMonth());
+        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
+        LocalDateTime endOfMonth = LocalDateTime.of(year, month, YearMonth.of(year, month).lengthOfMonth(), 23, 59, 59);
 
         List<Event> monthlyEvents = eventRepository.findAll().stream()
                 .filter(event ->
@@ -98,7 +97,7 @@ public class StatisticService {
                                 (!event.getEndDate().isBefore(startOfMonth) && !event.getEndDate().isAfter(endOfMonth)) ||
                                 (event.getStartDate().isBefore(startOfMonth) && event.getEndDate().isAfter(endOfMonth))
                 )
-                .collect(Collectors.toList());
+                .toList();
 
         int totalEnrollments = monthlyEvents.stream()
                 .mapToInt(Event::getCurrentEnrollments)
@@ -128,9 +127,9 @@ public class StatisticService {
                 .filter(token -> !token.getCreatedAt().isBefore(startOfMonth) && !token.getCreatedAt().isAfter(endOfMonth))
                 .collect(Collectors.toList());
 
-        Map<LocalDate, Long> enrollmentsByDay = monthlyTokens.stream()
+        Map<LocalDateTime, Long> enrollmentsByDay = monthlyTokens.stream()
                 .collect(Collectors.groupingBy(
-                        token -> token.getCreatedAt().toLocalDate(),
+                        token -> token.getCreatedAt().toLocalDate().atStartOfDay(),
                         Collectors.counting()
                 ));
 
@@ -138,7 +137,7 @@ public class StatisticService {
         int daysInMonth = YearMonth.of(year, month).lengthOfMonth();
 
         for (int day = 1; day <= daysInMonth; day++) {
-            LocalDate date = LocalDate.of(year, month, day);
+            LocalDateTime date = LocalDateTime.of(year, month, day, 0, 0);
             Long enrollments = enrollmentsByDay.getOrDefault(date, 0L);
             dailyRecords.add(DailyEnrollmentRecordDto.builder()
                     .date(date)

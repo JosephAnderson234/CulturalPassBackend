@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
@@ -13,5 +13,5 @@ import java.time.LocalDate;
 @Builder
 public class PendingEventsDto {
     private Long totalPendingEvents;
-    private LocalDate currentDate;
+    private LocalDateTime currentDate;
 }

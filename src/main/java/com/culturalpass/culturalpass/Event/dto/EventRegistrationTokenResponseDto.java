@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+
 import java.time.LocalDateTime;
 
 @Data
@@ -20,7 +20,7 @@ public class EventRegistrationTokenResponseDto {
     private String userEmail;
     private Long eventId;
     private String eventTitle;
-    private LocalDate eventDate;
+    private LocalDateTime eventDate;
     private boolean validated;
     private LocalDateTime createdAt;
     private LocalDateTime validatedAt;
