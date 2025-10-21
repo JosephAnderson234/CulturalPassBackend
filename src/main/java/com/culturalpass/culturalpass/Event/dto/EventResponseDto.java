@@ -23,4 +23,7 @@ public class EventResponseDto {
     private EventType type;
     private EventStatus status;
     private List<String> tags;
+    private Double costEntry;
+    private Integer capacity;
+    private Integer currentEnrollments;
 }

@@ -118,7 +118,15 @@ public class EventService {
             missingFields.append("status, ");
         }
 
-        if (missingFields.length() > 0) {
+        if(dto.getCostEntry() == null){
+            missingFields.append("costEntry, ");
+        }
+
+        if(dto.getCapacity() == null){
+            missingFields.append("capacity, ");
+        }
+
+        if (!missingFields.isEmpty()) {
             String fields = missingFields.substring(0, missingFields.length() - 2);
             throw new MissingEventFieldException("Faltan campos obligatorios: " + fields);
         }
@@ -170,7 +178,10 @@ public class EventService {
                 event.getLocation(),
                 event.getType(),
                 event.getStatus(),
-                event.getTags()
+                event.getTags(),
+                event.getCostEntry(),
+                event.getCapacity(),
+                event.getCurrentEnrollments()
         );
     }
 
@@ -184,5 +195,7 @@ public class EventService {
         if (isCreate || dto.getType() != null) event.setType(dto.getType());
         if (isCreate || dto.getStatus() != null) event.setStatus(dto.getStatus());
         if (isCreate || dto.getTags() != null) event.setTags(dto.getTags());
+        if (isCreate || dto.getCostEntry() != null) event.setCostEntry(dto.getCostEntry());
+        if (isCreate || dto.getCapacity() != null) event.setCapacity(dto.getCapacity());
     }
 }
