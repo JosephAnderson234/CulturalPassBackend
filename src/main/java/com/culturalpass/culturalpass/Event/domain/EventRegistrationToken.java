@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Entity
 @Table(name = "event_registration_tokens")
@@ -34,10 +34,10 @@ public class EventRegistrationToken {
     private boolean validated = false;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private OffsetDateTime  createdAt = OffsetDateTime.now();
 
     @Column
-    private LocalDateTime validatedAt;
+    private OffsetDateTime  validatedAt;
 
     public EventRegistrationToken(String token, User user, Event event) {
         this.token = token;

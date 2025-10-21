@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime ;
 import java.util.List;
 
 @Data
@@ -16,8 +16,8 @@ public class EventRequestDto {
     private String title;
     private String description;
     private String imageUrl; // Opcional
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private OffsetDateTime  startDate;
+    private OffsetDateTime  endDate;
     private String location;
     private EventType type;
     private EventStatus status;

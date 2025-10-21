@@ -10,7 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.URL;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Entity
@@ -36,10 +36,10 @@ public class Event {
     private String imageUrl = null;
 
     @NotNull
-    private LocalDateTime startDate;
+    private OffsetDateTime  startDate;
 
     @NotNull
-    private LocalDateTime endDate;
+    private OffsetDateTime endDate;
 
     @NotNull
     private String location;

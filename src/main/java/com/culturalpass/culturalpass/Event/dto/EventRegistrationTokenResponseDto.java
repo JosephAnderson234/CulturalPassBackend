@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Data
 @Builder
@@ -20,8 +20,8 @@ public class EventRegistrationTokenResponseDto {
     private String userEmail;
     private Long eventId;
     private String eventTitle;
-    private LocalDateTime eventDate;
+    private OffsetDateTime  eventDate;
     private boolean validated;
-    private LocalDateTime createdAt;
-    private LocalDateTime validatedAt;
+    private OffsetDateTime  createdAt;
+    private OffsetDateTime validatedAt;
 }

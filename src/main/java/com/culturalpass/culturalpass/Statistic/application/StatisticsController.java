@@ -8,7 +8,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime ;
 
 @RestController
 @RequestMapping("/api/statistics")
@@ -23,7 +23,7 @@ public class StatisticsController {
             @RequestParam(required = false) Integer month,
             @RequestParam(required = false) Integer year) {
 
-        LocalDateTime now = LocalDateTime.now();
+        OffsetDateTime  now = OffsetDateTime .now();
         Integer targetMonth = month != null ? month : now.getMonthValue();
         Integer targetYear = year != null ? year : now.getYear();
 

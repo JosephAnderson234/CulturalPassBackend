@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,8 +30,8 @@ public class StatisticService {
     public MonthlyUsersEnrolledDto getMonthlyUsersEnrolled(Integer month, Integer year) {
         validateMonthYear(month, year);
 
-        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime endOfMonth = LocalDateTime.of(year, month, YearMonth.of(year, month).lengthOfMonth(), 23, 59, 59);
+        OffsetDateTime startOfMonth = YearMonth.of(year, month).atDay(1).atTime(0, 0).atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime endOfMonth = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59).atOffset(OffsetDateTime.now().getOffset());
 
         long totalEnrollments = tokenRepository.findAll().stream()
                 .filter(token -> !token.getCreatedAt().isBefore(startOfMonth) && !token.getCreatedAt().isAfter(endOfMonth))
@@ -47,7 +47,7 @@ public class StatisticService {
     }
 
     public PendingEventsDto getPendingEvents() {
-        LocalDateTime today = LocalDateTime.now();
+        OffsetDateTime  today = OffsetDateTime.now();
 
         long pendingEvents = eventRepository.findAll().stream()
                 .filter(event -> event.getEndDate().isAfter(today))
@@ -66,8 +66,8 @@ public class StatisticService {
             throw new InvalidDateRangeException("El año debe estar entre 1900 y 2100");
         }
 
-        LocalDateTime startOfYear = LocalDateTime.of(year, 1, 1, 0, 0);
-        LocalDateTime endOfYear = LocalDateTime.of(year, 12, 31, 23, 59, 59);
+        OffsetDateTime startOfYear = OffsetDateTime.of(year, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
+        OffsetDateTime endOfYear = OffsetDateTime.of(year, 12, 31, 23, 59, 59, 0, OffsetDateTime.now().getOffset());
 
         long totalEvents = eventRepository.findAll().stream()
                 .filter(event ->
@@ -88,9 +88,8 @@ public class StatisticService {
     public MonthlyRevenueDto getMonthlyRevenue(Integer month, Integer year) {
         validateMonthYear(month, year);
 
-        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime endOfMonth = LocalDateTime.of(year, month, YearMonth.of(year, month).lengthOfMonth(), 23, 59, 59);
-
+        OffsetDateTime startOfMonth = YearMonth.of(year, month).atDay(1).atTime(0, 0).atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime endOfMonth = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59).atOffset(OffsetDateTime.now().getOffset());
         List<Event> monthlyEvents = eventRepository.findAll().stream()
                 .filter(event ->
                         (!event.getStartDate().isBefore(startOfMonth) && !event.getStartDate().isAfter(endOfMonth)) ||
@@ -120,16 +119,15 @@ public class StatisticService {
     public MonthlyEnrollmentRecordDto getMonthlyEnrollmentRecord(Integer month, Integer year) {
         validateMonthYear(month, year);
 
-        LocalDateTime startOfMonth = LocalDateTime.of(year, month, 1, 0, 0);
-        LocalDateTime endOfMonth = LocalDateTime.of(year, month, YearMonth.of(year, month).lengthOfMonth(), 23, 59, 59);
-
+        OffsetDateTime startOfMonth = YearMonth.of(year, month).atDay(1).atTime(0, 0).atOffset(OffsetDateTime.now().getOffset());
+        OffsetDateTime endOfMonth = YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59).atOffset(OffsetDateTime.now().getOffset());
         List<EventRegistrationToken> monthlyTokens = tokenRepository.findAll().stream()
                 .filter(token -> !token.getCreatedAt().isBefore(startOfMonth) && !token.getCreatedAt().isAfter(endOfMonth))
-                .collect(Collectors.toList());
+                .toList();
 
-        Map<LocalDateTime, Long> enrollmentsByDay = monthlyTokens.stream()
+        Map<OffsetDateTime, Long> enrollmentsByDay = monthlyTokens.stream()
                 .collect(Collectors.groupingBy(
-                        token -> token.getCreatedAt().toLocalDate().atStartOfDay(),
+                        token -> token.getCreatedAt().toLocalDate().atStartOfDay().atOffset(OffsetDateTime.now().getOffset()),
                         Collectors.counting()
                 ));
 
@@ -137,7 +135,7 @@ public class StatisticService {
         int daysInMonth = YearMonth.of(year, month).lengthOfMonth();
 
         for (int day = 1; day <= daysInMonth; day++) {
-            LocalDateTime date = LocalDateTime.of(year, month, day, 0, 0);
+            OffsetDateTime date = OffsetDateTime.of(year, month, day, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
             Long enrollments = enrollmentsByDay.getOrDefault(date, 0L);
             dailyRecords.add(DailyEnrollmentRecordDto.builder()
                     .date(date)
