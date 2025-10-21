@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,7 +76,7 @@ public class EventRegistrationTokenService {
         }
 
         token.setValidated(true);
-        token.setValidatedAt(LocalDateTime.now());
+        token.setValidatedAt(OffsetDateTime.now());
 
         EventRegistrationToken savedToken = tokenRepository.save(token);
         log.info("Token {} validado para usuario {} en evento {}",
@@ -100,7 +100,7 @@ public class EventRegistrationTokenService {
                     "El token para " + user.getEmail() + " en el evento " + event.getTitle() + " ya fue validado anteriormente");
         }
         token.setValidated(true);
-        token.setValidatedAt(LocalDateTime.now());
+        token.setValidatedAt(OffsetDateTime.now());
         EventRegistrationToken savedToken = tokenRepository.save(token);
         log.info("Token validado manualmente para usuario {} ({}) en evento {} por admin",
                 user.getEmail(), user.getFirstName(), event.getTitle());
