@@ -198,4 +198,19 @@ public class EventService {
         if (isCreate || dto.getCostEntry() != null) event.setCostEntry(dto.getCostEntry());
         if (isCreate || dto.getCapacity() != null) event.setCapacity(dto.getCapacity());
     }
+
+    public PaginatedResponseDto<EventResponseDto> getUsersEvent(Long idUser, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> eventPage = eventRepository.findByRegisteredUsersId(idUser, pageable);
+        List<EventResponseDto> content = eventPage.getContent().stream()
+                .map(this::toDto)
+                .toList();
+        return PaginatedResponseDto.<EventResponseDto>builder()
+                .content(content)
+                .currentPage(eventPage.getNumber())
+                .totalPages(eventPage.getTotalPages())
+                .totalElements(eventPage.getTotalElements())
+                .size(eventPage.getSize())
+                .build();
+    }
 }

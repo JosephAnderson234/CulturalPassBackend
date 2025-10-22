@@ -11,4 +11,9 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     boolean existsByTitle(String title);
 
     Page<Event> findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String title, String description, Pageable pageable);
+
+    // Buscar eventos donde la lista registeredUsers contiene un usuario con el id dado
+    Page<Event> findByRegisteredUsersId(Long userId, Pageable pageable);
+
+
 }

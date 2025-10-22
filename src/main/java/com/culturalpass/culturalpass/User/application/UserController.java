@@ -1,5 +1,7 @@
 package com.culturalpass.culturalpass.User.application;
 
+import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
+import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
 import com.culturalpass.culturalpass.User.domain.UserService;
 import com.culturalpass.culturalpass.User.dto.UserResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,4 +32,19 @@ public class UserController {
         userService.registerToEvent(userDetails.getUsername(), eventId);
         return ResponseEntity.ok().build();
     }
+
+    @PreAuthorize("hasRole('CLIENTE')")
+    @PostMapping("/events")
+    public ResponseEntity<PaginatedResponseDto<EventResponseDto>> getEventsEnrolled(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(defaultValue = "0") int currentPage, @RequestParam(defaultValue = "10") int pageSize) {
+        return ResponseEntity.ok(userService.getEventsByUsername(userDetails.getUsername(), currentPage, pageSize));
+    }
+
+    @PreAuthorize("hasRole('CLIENTE')")
+    @GetMapping("/events/{eventId}/inrolled")
+    public ResponseEntity<Boolean> isUserEnrolledInEvent(@AuthenticationPrincipal UserDetails userDetails,
+                                                         @PathVariable Long eventId) {
+        Boolean isEnrolled = userService.isUserEnrolledInEvent(userDetails.getUsername(), eventId);
+        return ResponseEntity.ok(isEnrolled);
+    }
+
 }

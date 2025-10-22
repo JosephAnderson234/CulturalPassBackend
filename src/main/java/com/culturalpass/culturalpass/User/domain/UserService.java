@@ -1,6 +1,9 @@
 package com.culturalpass.culturalpass.User.domain;
 
 import com.culturalpass.culturalpass.Event.domain.Event;
+import com.culturalpass.culturalpass.Event.domain.EventService;
+import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
+import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
 import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRepository;
 import com.culturalpass.culturalpass.Event.domain.EventRegistrationToken;
@@ -19,6 +22,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private EventService eventService;
 
     @Autowired
     private EventRepository eventRepository;
@@ -60,5 +66,20 @@ public class UserService {
         EventRegistrationToken registrationToken = new EventRegistrationToken(token, user, event);
         eventRegistrationTokenRepository.save(registrationToken);
         eventPublisher.publishEvent(new UserEnrolledEvent(this, user, event, token));
+    }
+
+    public PaginatedResponseDto<EventResponseDto> getEventsByUsername(String username, int page, int size){
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + username));
+        return eventService.getUsersEvent(user.getId(), page, size);
+    }
+
+    public boolean isUserEnrolledInEvent(String userEmail, Long eventId) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + userEmail));
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado con id: " + eventId));
+
+        return event.getRegisteredUsers().contains(user);
     }
 }
