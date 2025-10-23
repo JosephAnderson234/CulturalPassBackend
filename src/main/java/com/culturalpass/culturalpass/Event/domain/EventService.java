@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -167,7 +169,7 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    private EventResponseDto toDto(Event event) {
+    public EventResponseDto toDto(Event event) {
         return new EventResponseDto(
                 event.getId(),
                 event.getTitle(),
@@ -212,5 +214,14 @@ public class EventService {
                 .totalElements(eventPage.getTotalElements())
                 .size(eventPage.getSize())
                 .build();
+    }
+
+    public List<EventResponseDto> getNearestAndOpenEvents(List<Event> events) {
+        OffsetDateTime now = OffsetDateTime.now();
+        return events.stream()
+                .filter(event -> (event.getStatus() == EventStatus.APERTURADO || event.getStatus() == EventStatus.EN_CURSO) && event.getStartDate().isAfter(now)).
+                sorted(Comparator.comparing(Event::getStartDate))
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 }

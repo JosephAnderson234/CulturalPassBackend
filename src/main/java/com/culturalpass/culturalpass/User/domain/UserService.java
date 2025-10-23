@@ -15,7 +15,11 @@ import com.culturalpass.culturalpass.User.exceptions.UserAlreadyRegisteredExcept
 import com.culturalpass.culturalpass.User.infrastructure.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class UserService {
@@ -81,5 +85,19 @@ public class UserService {
                 .orElseThrow(() -> new EventNotFoundException("Evento no encontrado con id: " + eventId));
 
         return event.getRegisteredUsers().contains(user);
+    }
+
+    public List<EventResponseDto> getAllEventsByEmail (String email){
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + email));
+        List<Event> events = user.getEventsRegistered();
+        return events.stream().map(eventService::toDto).toList();
+    }
+
+    public List<EventResponseDto> getNearestEventsByUser(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + email));
+        List<Event> events = user.getEventsRegistered();
+        return eventService.getNearestAndOpenEvents(events);
     }
 }

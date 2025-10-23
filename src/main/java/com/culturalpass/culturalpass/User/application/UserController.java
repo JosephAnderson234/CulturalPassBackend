@@ -11,6 +11,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/user")
 public class UserController {
@@ -45,6 +47,18 @@ public class UserController {
                                                          @PathVariable Long eventId) {
         Boolean isEnrolled = userService.isUserEnrolledInEvent(userDetails.getUsername(), eventId);
         return ResponseEntity.ok(isEnrolled);
+    }
+
+    @PreAuthorize("hasRole('CLIENTE')")
+    @PostMapping("/events/all")
+    public ResponseEntity<List<EventResponseDto>> getEventsEnrolledAll(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getAllEventsByEmail(userDetails.getUsername()));
+    }
+
+    @PreAuthorize("hasRole('CLIENTE')")
+    @PostMapping("/events/nearest")
+    public ResponseEntity<List<EventResponseDto>> getNearestEventsWithAperturadoOrEnCursoStatus(@AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getNearestEventsByUser(userDetails.getUsername()));
     }
 
 }
