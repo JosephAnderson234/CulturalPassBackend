@@ -6,17 +6,19 @@ import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
 import com.culturalpass.culturalpass.Event.exceptions.EventAlreadyExistsException;
 import com.culturalpass.culturalpass.Event.exceptions.EventNotFoundException;
 import com.culturalpass.culturalpass.Event.exceptions.MissingEventFieldException;
-import com.culturalpass.culturalpass.Event.exceptions.UserValidationException;
 import com.culturalpass.culturalpass.Event.infrastructure.EventRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,69 +35,196 @@ public class EventService {
                 .collect(Collectors.toList());
     }
 
-    public PaginatedResponseDto<EventResponseDto> searchEventsPaginated(int page, int size, String term) {
-        if (page < 0) {
-            throw new UserValidationException("El número de página debe ser mayor o igual a 0");
-        }
-        if (size < 1 || size > 100) {
-            throw new UserValidationException("El tamaño de página debe estar entre 1 y 100");
-        }
-        try {
-            Pageable pageable = PageRequest.of(page, size);
-            Page<Event> eventPage = eventRepository.findByTitleContainingIgnoreCaseOrDescriptionContainingIgnoreCase(term, term, pageable);
-            List<EventResponseDto> content = eventPage.getContent().stream()
-                    .map(this::toDto)
-                    .collect(Collectors.toList());
+    public PaginatedResponseDto<EventResponseDto> searchEventsPaginated(
+            int page,
+            int size,
+            String term,
+            EventType type,
+            String tag,
+            String sortByDate,
+            String sortByCost) {
 
-            return PaginatedResponseDto.<EventResponseDto>builder()
-                    .content(content)
-                    .currentPage(eventPage.getNumber())
-                    .totalPages(eventPage.getTotalPages())
-                    .totalElements(eventPage.getTotalElements())
-                    .size(eventPage.getSize())
-                    .build();
+        validatePaginationParams(page, size);
+        try {
+            Specification<Event> spec = createFilterSpecification(term, type, tag);
+            Sort sort = createDynamicSort(sortByDate, sortByCost);
+            Pageable pageable = PageRequest.of(page, size, sort);
+
+            Page<Event> eventPage = eventRepository.findAll(spec, pageable);
+            return buildPaginatedResponse(eventPage);
         } catch (Exception e) {
-            throw new UserValidationException("Parámetros de paginación inválidos: " + e.getMessage());
+            throw new MissingEventFieldException("Parámetros de búsqueda inválidos: " + e.getMessage());
         }
     }
 
     public PaginatedResponseDto<EventResponseDto> getAllEventsPaginated(int page, int size, String sortBy, String sortDir) {
-        if (page < 0) {
-            throw new UserValidationException("El número de página debe ser mayor o igual a 0");
-        }
-        if (size < 1 || size > 100) {
-            throw new UserValidationException("El tamaño de página debe estar entre 1 y 100");
-        }
+        validatePaginationParams(page, size);
         try {
-            Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-            Sort sort = Sort.by(direction, sortBy);
-            Pageable pageable = PageRequest.of(page, size, sort);
-
+            Pageable pageable = createPageable(page, size, sortBy, sortDir);
             Page<Event> eventPage = eventRepository.findAll(pageable);
-            List<EventResponseDto> content = eventPage.getContent().stream()
-                    .map(this::toDto)
-                    .collect(Collectors.toList());
-
-            return PaginatedResponseDto.<EventResponseDto>builder()
-                    .content(content)
-                    .currentPage(eventPage.getNumber())
-                    .totalPages(eventPage.getTotalPages())
-                    .totalElements(eventPage.getTotalElements())
-                    .size(eventPage.getSize())
-                    .build();
+            return buildPaginatedResponse(eventPage);
         } catch (Exception e) {
-            throw new UserValidationException("Parámetros de paginación inválidos: " + e.getMessage());
+            throw new MissingEventFieldException("Parámetros de paginación inválidos: " + e.getMessage());
         }
     }
 
+    public PaginatedResponseDto<EventResponseDto> getUsersEvent(Long idUser, int page, int size) {
+        validatePaginationParams(page, size);
+        Pageable pageable = createPageable(page, size, null, null);
+        Page<Event> eventPage = eventRepository.findByRegisteredUsersId(idUser, pageable);
+        return buildPaginatedResponse(eventPage);
+    }
 
     public EventResponseDto getEventById(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
+        Event event = findEventById(id);
         return toDto(event);
     }
 
     public EventResponseDto createEvent(EventRequestDto dto) {
+        validateRequiredFields(dto);
+
+        if (eventRepository.existsByTitle(dto.getTitle())) {
+            throw new EventAlreadyExistsException("Ya existe un evento con el título: " + dto.getTitle());
+        }
+
+        Event event = new Event();
+        updateEventFromDto(event, dto, true);
+        event.setRegisteredUsers(List.of());
+        Event saved = eventRepository.save(event);
+        return toDto(saved);
+    }
+
+    public EventResponseDto updateEvent(Long id, EventRequestDto dto) {
+        Event event = findEventById(id);
+        updateEventFromDto(event, dto, false);
+        Event updated = eventRepository.save(event);
+        return toDto(updated);
+    }
+
+    public void deleteEvent(Long id) {
+        Event event = findEventById(id);
+        eventRepository.delete(event);
+    }
+
+    public List<UserShortDto> getUsersByEvent(Long eventId) {
+        Event event = findEventById(eventId);
+        return event.getRegisteredUsers().stream()
+                .map(user -> new UserShortDto(
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getEmail()))
+                .collect(Collectors.toList());
+    }
+
+    public List<EventResponseDto> getNearestAndOpenEvents(List<Event> events) {
+        OffsetDateTime now = OffsetDateTime.now();
+        return events.stream()
+                .filter(event -> (event.getStatus() == EventStatus.APERTURADO ||
+                        event.getStatus() == EventStatus.EN_CURSO) &&
+                        event.getStartDate().isAfter(now))
+                .sorted(Comparator.comparing(Event::getStartDate))
+                .map(this::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // Métodos privados auxiliares
+
+    private void validatePaginationParams(int page, int size) {
+        if (page < 0) {
+            throw new MissingEventFieldException("El número de página debe ser mayor o igual a 0");
+        }
+        if (size < 1 || size > 100) {
+            throw new MissingEventFieldException("El tamaño de página debe estar entre 1 y 100");
+        }
+    }
+
+    private Pageable createPageable(int page, int size, String sortBy, String sortDir) {
+        if (sortBy != null && sortDir != null) {
+            Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ?
+                    Sort.Direction.DESC : Sort.Direction.ASC;
+            Sort sort = Sort.by(direction, sortBy);
+            return PageRequest.of(page, size, sort);
+        }
+        return PageRequest.of(page, size);
+    }
+
+    private Specification<Event> createFilterSpecification(String term, EventType type, String tag) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filtro por término de búsqueda (título o descripción)
+            if (term != null && !term.isBlank()) {
+                String searchTerm = "%" + term.toLowerCase() + "%";
+                Predicate titlePredicate = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("title")), searchTerm);
+                Predicate descriptionPredicate = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("description")), searchTerm);
+                predicates.add(criteriaBuilder.or(titlePredicate, descriptionPredicate));
+            }
+
+            // Filtro por tipo de evento
+            if (type != null) {
+                predicates.add(criteriaBuilder.equal(root.get("type"), type));
+            }
+
+            // Filtro por tag
+            if (tag != null && !tag.isBlank()) {
+                predicates.add(criteriaBuilder.isMember(tag, root.get("tags")));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private Sort createDynamicSort(String sortByDate, String sortByCost) {
+        List<Sort.Order> orders = new ArrayList<>();
+
+        // Ordenar por fecha
+        if (sortByDate != null && !sortByDate.isBlank()) {
+            if (sortByDate.equalsIgnoreCase("nearest") || sortByDate.equalsIgnoreCase("asc")) {
+                orders.add(Sort.Order.asc("startDate"));
+            } else if (sortByDate.equalsIgnoreCase("farthest") || sortByDate.equalsIgnoreCase("desc")) {
+                orders.add(Sort.Order.desc("startDate"));
+            }
+        }
+
+        // Ordenar por costo
+        if (sortByCost != null && !sortByCost.isBlank()) {
+            if (sortByCost.equalsIgnoreCase("cheapest") || sortByCost.equalsIgnoreCase("asc")) {
+                orders.add(Sort.Order.asc("costEntry"));
+            } else if (sortByCost.equalsIgnoreCase("expensive") || sortByCost.equalsIgnoreCase("desc")) {
+                orders.add(Sort.Order.desc("costEntry"));
+            }
+        }
+
+        // Si no hay ordenamiento especificado, ordenar por fecha ascendente por defecto
+        if (orders.isEmpty()) {
+            orders.add(Sort.Order.asc("startDate"));
+        }
+
+        return Sort.by(orders);
+    }
+
+    private PaginatedResponseDto<EventResponseDto> buildPaginatedResponse(Page<Event> eventPage) {
+        List<EventResponseDto> content = eventPage.getContent().stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
+
+        return PaginatedResponseDto.<EventResponseDto>builder()
+                .content(content)
+                .currentPage(eventPage.getNumber())
+                .totalPages(eventPage.getTotalPages())
+                .totalElements(eventPage.getTotalElements())
+                .size(eventPage.getSize())
+                .build();
+    }
+
+    private Event findEventById(Long id) {
+        return eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
+    }
+
+    private void validateRequiredFields(EventRequestDto dto) {
         StringBuilder missingFields = new StringBuilder();
 
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
@@ -119,12 +248,10 @@ public class EventService {
         if (dto.getStatus() == null) {
             missingFields.append("status, ");
         }
-
-        if(dto.getCostEntry() == null){
+        if (dto.getCostEntry() == null) {
             missingFields.append("costEntry, ");
         }
-
-        if(dto.getCapacity() == null){
+        if (dto.getCapacity() == null) {
             missingFields.append("capacity, ");
         }
 
@@ -132,41 +259,6 @@ public class EventService {
             String fields = missingFields.substring(0, missingFields.length() - 2);
             throw new MissingEventFieldException("Faltan campos obligatorios: " + fields);
         }
-
-        if (eventRepository.existsByTitle(dto.getTitle())) {
-            throw new EventAlreadyExistsException("Ya existe un evento con el título: " + dto.getTitle());
-        }
-
-        Event event = new Event();
-        updateEventFromDto(event, dto, true);
-        event.setRegisteredUsers(List.of());
-        Event saved = eventRepository.save(event);
-        return toDto(saved);
-    }
-
-    public EventResponseDto updateEvent(Long id, EventRequestDto dto) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
-        updateEventFromDto(event, dto, false);
-        Event updated = eventRepository.save(event);
-        return toDto(updated);
-    }
-
-    public void deleteEvent(Long id) {
-        Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
-        eventRepository.delete(event);
-    }
-
-    public List<UserShortDto> getUsersByEvent(Long eventId) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado"));
-        return event.getRegisteredUsers().stream()
-                .map(user -> new UserShortDto(
-                        user.getFirstName(),
-                        user.getLastName(),
-                        user.getEmail()))
-                .collect(Collectors.toList());
     }
 
     public EventResponseDto toDto(Event event) {
@@ -199,29 +291,5 @@ public class EventService {
         if (isCreate || dto.getTags() != null) event.setTags(dto.getTags());
         if (isCreate || dto.getCostEntry() != null) event.setCostEntry(dto.getCostEntry());
         if (isCreate || dto.getCapacity() != null) event.setCapacity(dto.getCapacity());
-    }
-
-    public PaginatedResponseDto<EventResponseDto> getUsersEvent(Long idUser, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Event> eventPage = eventRepository.findByRegisteredUsersId(idUser, pageable);
-        List<EventResponseDto> content = eventPage.getContent().stream()
-                .map(this::toDto)
-                .toList();
-        return PaginatedResponseDto.<EventResponseDto>builder()
-                .content(content)
-                .currentPage(eventPage.getNumber())
-                .totalPages(eventPage.getTotalPages())
-                .totalElements(eventPage.getTotalElements())
-                .size(eventPage.getSize())
-                .build();
-    }
-
-    public List<EventResponseDto> getNearestAndOpenEvents(List<Event> events) {
-        OffsetDateTime now = OffsetDateTime.now();
-        return events.stream()
-                .filter(event -> (event.getStatus() == EventStatus.APERTURADO || event.getStatus() == EventStatus.EN_CURSO) && event.getStartDate().isAfter(now)).
-                sorted(Comparator.comparing(Event::getStartDate))
-                .map(this::toDto)
-                .collect(Collectors.toList());
     }
 }

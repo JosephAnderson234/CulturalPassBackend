@@ -178,6 +178,36 @@
 					"response": []
 				},
 				{
+					"name": "Mis eventos paginados",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/me/events",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"me",
+								"events"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Inscribirse a evento",
 					"request": {
 						"auth": {
@@ -225,25 +255,26 @@
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/event",
+							"raw": "{{baseUrl}}/api/event/all",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"event"
+								"event",
+								"all"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Listar eventos - paginado",
+					"name": "Listar eventos paginados",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/event/paginated?currentPage=-1&pageSize=10",
+							"raw": "{{baseUrl}}/api/event/paginated?currentPage=0&pageSize=10",
 							"host": [
 								"{{baseUrl}}"
 							],
@@ -255,11 +286,21 @@
 							"query": [
 								{
 									"key": "currentPage",
-									"value": "-1"
+									"value": "0"
 								},
 								{
 									"key": "pageSize",
 									"value": "10"
+								},
+								{
+									"key": "sortBy",
+									"value": "id",
+									"disabled": true
+								},
+								{
+									"key": "sortDir",
+									"value": "asc",
+									"disabled": true
 								}
 							]
 						}
@@ -267,7 +308,63 @@
 					"response": []
 				},
 				{
-					"name": "Listar usuarios inscritos x evento",
+					"name": "Listar eventos filtrados",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/event/filtered?currentPage=0&pageSize=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"event",
+								"filtered"
+							],
+							"query": [
+								{
+									"key": "currentPage",
+									"value": "0"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								},
+								{
+									"key": "term",
+									"value": "rock",
+									"disabled": true
+								},
+								{
+									"key": "type",
+									"value": "CONCIERTO",
+									"disabled": true
+								},
+								{
+									"key": "tag",
+									"value": "música",
+									"disabled": true
+								},
+								{
+									"key": "sortByDate",
+									"value": "nearest",
+									"description": "OPCIONES:\nnearest o asc \nfarthest o desc",
+									"disabled": true
+								},
+								{
+									"key": "sortByCost",
+									"value": "expensive",
+									"description": "OPCIONES:\ncheapest o asc \nexpensive o desc",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Usuarios inscritos x evento",
 					"request": {
 						"auth": {
 							"type": "bearer",
@@ -295,7 +392,7 @@
 							"variable": [
 								{
 									"key": "eventId",
-									"value": "1"
+									"value": "2"
 								}
 							]
 						}
@@ -344,7 +441,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"title\": \"Concierto de Jazz\",\r\n  \"description\": \"Disfruta de una noche de jazz con artistas locales.\",\r\n  \"imageUrl\": \"https://ejemplo.com/jazz.jpg\",\r\n  \"startDate\": \"2025-09-10\",\r\n  \"endDate\": \"2025-09-10\",\r\n  \"location\": \"Auditorio Principal\",\r\n  \"type\": \"CONCIERTO\",\r\n  \"status\": \"APERTURADO\",\r\n  \"tags\": [\"música\", \"jazz\", \"cultural\"]\r\n}",
+							"raw": "{\r\n  \"title\": \"Concierto de Jazz\",\r\n  \"description\": \"Disfruta de una noche de jazz con artistas locales.\",\r\n  \"imageUrl\": \"https://ejemplo.com/jazz.jpg\",\r\n  \"startDate\": \"2025-09-10T18:00:00-05:00\",\r\n  \"endDate\": \"2025-09-10T23:00:00-05:00\",\r\n  \"location\": \"Auditorio Principal\",\r\n  \"type\": \"CONCIERTO\",\r\n  \"status\": \"APERTURADO\",\r\n  \"capacity\": 100,\r\n  \"costEntry\": 50.0,\r\n  \"tags\": [\"música\", \"jazz\", \"cultural\"]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -352,13 +449,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/event",
+							"raw": "{{baseUrl}}/api/event/create",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
-								"event"
+								"event",
+								"create"
 							]
 						}
 					},
@@ -390,16 +488,16 @@
 							]
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/event/image/upload/:eventId",
+							"raw": "{{baseUrl}}/api/event/:eventId/image/upload",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"event",
+								":eventId",
 								"image",
-								"upload",
-								":eventId"
+								"upload"
 							],
 							"variable": [
 								{
@@ -436,14 +534,15 @@
 							}
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/event/:eventId",
+							"raw": "{{baseUrl}}/api/event/:eventId/update",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"event",
-								":eventId"
+								":eventId",
+								"update"
 							],
 							"variable": [
 								{
@@ -471,19 +570,20 @@
 						"method": "DELETE",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/event/:eventId",
+							"raw": "{{baseUrl}}/api/event/:eventId/delete",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"event",
-								":eventId"
+								":eventId",
+								"delete"
 							],
 							"variable": [
 								{
 									"key": "eventId",
-									"value": ""
+									"value": "1"
 								}
 							]
 						}

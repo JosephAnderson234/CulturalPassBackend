@@ -36,13 +36,13 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
-    @PostMapping("/events")
+    @GetMapping("/me/events")
     public ResponseEntity<PaginatedResponseDto<EventResponseDto>> getEventsEnrolled(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(defaultValue = "0") int currentPage, @RequestParam(defaultValue = "10") int pageSize) {
         return ResponseEntity.ok(userService.getEventsByUsername(userDetails.getUsername(), currentPage, pageSize));
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
-    @GetMapping("/events/{eventId}/inrolled")
+    @GetMapping("/me/enrolled/{eventId}")
     public ResponseEntity<Boolean> isUserEnrolledInEvent(@AuthenticationPrincipal UserDetails userDetails,
                                                          @PathVariable Long eventId) {
         Boolean isEnrolled = userService.isUserEnrolledInEvent(userDetails.getUsername(), eventId);
@@ -50,13 +50,13 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
-    @PostMapping("/events/all")
+    @GetMapping("/me/events/all")
     public ResponseEntity<List<EventResponseDto>> getEventsEnrolledAll(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(userService.getAllEventsByEmail(userDetails.getUsername()));
     }
 
     @PreAuthorize("hasRole('CLIENTE')")
-    @PostMapping("/events/nearest")
+    @GetMapping("/me/events/nearest")
     public ResponseEntity<List<EventResponseDto>> getNearestEventsWithAperturadoOrEnCursoStatus(@AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(userService.getNearestEventsByUser(userDetails.getUsername()));
     }

@@ -1,23 +1,19 @@
 package com.culturalpass.culturalpass.Event.application;
 
 import com.culturalpass.culturalpass.Event.domain.EventService;
+import com.culturalpass.culturalpass.Event.domain.EventType;
 import com.culturalpass.culturalpass.Event.domain.ImageService;
 import com.culturalpass.culturalpass.Event.dto.EventRequestDto;
 import com.culturalpass.culturalpass.Event.dto.EventResponseDto;
-import com.culturalpass.culturalpass.Event.domain.EventRegistrationToken;
 import com.culturalpass.culturalpass.Event.dto.PaginatedResponseDto;
-import com.culturalpass.culturalpass.Event.infrastructure.EventRegistrationTokenRepository;
 import com.culturalpass.culturalpass.User.dto.UserShortDto;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/event")
@@ -29,7 +25,7 @@ public class EventController {
     @Autowired
     private ImageService imageService;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<EventResponseDto>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
@@ -41,17 +37,23 @@ public class EventController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        PaginatedResponseDto<EventResponseDto> events = eventService.getAllEventsPaginated(currentPage, pageSize, sortBy, sortDir);
+        PaginatedResponseDto<EventResponseDto> events = eventService.getAllEventsPaginated(
+                currentPage, pageSize, sortBy, sortDir);
         return ResponseEntity.ok(events);
     }
 
-    @GetMapping("/search")
+    @GetMapping("/filtered")
     public ResponseEntity<PaginatedResponseDto<EventResponseDto>> searchEvents(
             @RequestParam(defaultValue = "0") int currentPage,
             @RequestParam(defaultValue = "10") int pageSize,
-            @RequestParam String term
+            @RequestParam(required = false) String term,
+            @RequestParam(required = false) EventType type,
+            @RequestParam(required = false) String tag,
+            @RequestParam(required = false) String sortByDate,
+            @RequestParam(required = false) String sortByCost
     ) {
-        return ResponseEntity.ok(eventService.searchEventsPaginated(currentPage, pageSize, term));
+        return ResponseEntity.ok(eventService.searchEventsPaginated(
+                currentPage, pageSize, term, type, tag, sortByDate, sortByCost));
     }
 
     @GetMapping("/{eventId}")
@@ -60,13 +62,13 @@ public class EventController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<EventResponseDto> createEvent(@RequestBody EventRequestDto dto) {
         return ResponseEntity.ok(eventService.createEvent(dto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/image/upload/{eventId}")
+    @PutMapping("/{eventId}/image/upload")
     public ResponseEntity<String> uploadEventImage(
             @PathVariable Long eventId,
             @RequestParam("imageFile") MultipartFile imageFile) {
@@ -79,13 +81,15 @@ public class EventController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @PutMapping("/{eventId}")
-    public ResponseEntity<EventResponseDto> updateEvent(@PathVariable Long eventId, @RequestBody EventRequestDto dto) {
+    @PutMapping("/{eventId}/update")
+    public ResponseEntity<EventResponseDto> updateEvent(
+            @PathVariable Long eventId,
+            @RequestBody EventRequestDto dto) {
         return ResponseEntity.ok(eventService.updateEvent(eventId, dto));
     }
 
     @PreAuthorize("hasRole('ADMIN')")
-    @DeleteMapping("/{eventId}")
+    @DeleteMapping("/{eventId}/delete")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long eventId) {
         eventService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
