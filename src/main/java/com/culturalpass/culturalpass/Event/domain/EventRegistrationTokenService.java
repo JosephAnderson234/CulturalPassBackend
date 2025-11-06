@@ -46,6 +46,20 @@ public class EventRegistrationTokenService {
         return mapToResponseDto(token);
     }
 
+    public EventRegistrationTokenResponseDto getTokenByUserEmailAndEvent(String userEmail, Long eventId) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado con email: " + userEmail));
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new EventNotFoundException("Evento no encontrado con id: " + eventId));
+
+        EventRegistrationToken token = tokenRepository.findByUserAndEvent(user, event)
+                .orElseThrow(() -> new TokenNotFoundException(
+                        "No estás registrado en este evento o no tienes un token asociado"));
+
+        return mapToResponseDto(token);
+    }
+
     public List<EventRegistrationTokenResponseDto> getTokensByEvent(Long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("Evento no encontrado con id: " + eventId));
