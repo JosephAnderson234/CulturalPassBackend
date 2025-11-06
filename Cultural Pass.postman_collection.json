@@ -208,6 +208,68 @@
 					"response": []
 				},
 				{
+					"name": "Todos mis eventos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/me/events/all",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"me",
+								"events",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mis eventos próximos",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/me/events/nearest",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"me",
+								"events",
+								"nearest"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Inscribirse a evento",
 					"request": {
 						"auth": {
@@ -238,6 +300,44 @@
 								{
 									"key": "eventId",
 									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Mi token x evento",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/token/user/me/event/:eventid",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"token",
+								"user",
+								"me",
+								"event",
+								":eventid"
+							],
+							"variable": [
+								{
+									"key": "eventid",
+									"value": "2"
 								}
 							]
 						}
