@@ -152,6 +152,10 @@ public class EventService {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // Filtro para excluir eventos finalizados (endDate debe ser mayor o igual a la fecha actual)
+            OffsetDateTime now = OffsetDateTime.now();
+            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("endDate"), now));
+
             // Filtro por término de búsqueda (título o descripción)
             if (term != null && !term.isBlank()) {
                 String searchTerm = "%" + term.toLowerCase() + "%";
