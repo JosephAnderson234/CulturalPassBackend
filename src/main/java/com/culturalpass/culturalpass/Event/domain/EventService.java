@@ -121,7 +121,7 @@ public class EventService {
         return events.stream()
                 .filter(event -> (event.getStatus() == EventStatus.APERTURADO ||
                         event.getStatus() == EventStatus.EN_CURSO) &&
-                        event.getStartDate().isAfter(now))
+                        event.getEndDate() != null && !event.getEndDate().isBefore(now))
                 .sorted(Comparator.comparing(Event::getStartDate))
                 .map(this::toDto)
                 .collect(Collectors.toList());
