@@ -1,52 +1,29 @@
-# ===== BUILD STAGE =====
-FROM maven:3.9-eclipse-temurin-17-alpine AS build
+# ===== BUILD =====
+FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /workspace
 
-# Copiar solo archivos de dependencias primero (mejor cache)
+# Cacheo de dependencias
 COPY pom.xml .
-COPY .mvn .mvn
-COPY mvnw .
+RUN mvn -q -DskipTests dependency:go-offline
 
-# Descargar dependencias (esta capa se cachea si pom.xml no cambia)
-RUN mvn dependency:go-offline -B
-
-# Copiar código fuente
+# Compila
 COPY src ./src
+RUN mvn -q -DskipTests package
 
-# Compilar aplicación (skip tests para build más rápido)
-RUN mvn clean package -DskipTests -B
-
-# ===== RUNTIME STAGE =====
-FROM eclipse-temurin:17-jre-alpine
+# ===== RUNTIME =====
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 
-# Instalar dumb-init para mejor manejo de señales
-RUN apk add --no-cache dumb-init
+# Copia el JAR final (ajusta el patrón si tu artefacto tiene otro nombre)
+COPY --from=build /workspace/target/*.jar /app/app.jar
 
-# Copiar JAR desde build stage
-COPY --from=build /workspace/target/*.jar app.jar
+# Usuario no root
+RUN useradd -r -u 1001 spring && chown -R spring:spring /app
+USER spring
 
-# Crear usuario no privilegiado
-RUN addgroup -S spring && adduser -S spring -G spring && \
-    chown -R spring:spring /app
+# Flags JVM amigables con 512MB RAM del tier free
+ENV JAVA_OPTS="-Xms64m -Xmx256m -XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Dfile.encoding=UTF-8"
 
-# Cambiar a usuario no root
-USER spring:spring
+# Koyeb te da PORT; lo mapeamos a Spring (SERVER_PORT)
+ENTRYPOINT ["sh","-c","exec env SERVER_PORT=${PORT:-8080} java $JAVA_OPTS -jar /app/app.jar"]
 
-# Variables de entorno optimizadas para contenedor
-ENV JAVA_OPTS="-XX:+UseContainerSupport \
-    -XX:MaxRAMPercentage=75.0 \
-    -XX:InitialRAMPercentage=50.0 \
-    -XX:+UseG1GC \
-    -XX:+OptimizeStringConcat \
-    -Djava.security.egd=file:/dev/./urandom \
-    -Dfile.encoding=UTF-8"
-
-# Puerto por defecto
-EXPOSE 8080
-
-# Usar dumb-init como PID 1
-ENTRYPOINT ["dumb-init", "--"]
-
-# Comando de inicio
-CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
