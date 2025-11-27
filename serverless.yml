@@ -1,7 +1,5 @@
 service: cultural-pass-api
 
-frameworkVersion: '3'
-
 provider:
   name: aws
   region: ${opt:region, 'us-east-1'}  # Cambia según tu región preferida
