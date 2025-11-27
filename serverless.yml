@@ -2,367 +2,130 @@ service: cultural-pass-api
 
 provider:
   name: aws
-  region: ${opt:region, 'us-east-1'}  # Cambia según tu región preferida
+  region: ${opt:region, 'us-east-1'}
   stage: ${opt:stage, 'dev'}
-  
-  # API Gateway configuration
-  apiGateway:
-    shouldStartNameWithService: true
-    description: API Gateway para Cultural Pass Backend
 
 # Variables personalizadas
 custom:
   # IMPORTANTE: Actualiza esta URL con la URL de tu contenedor desplegado
-  # Puede ser:
-  # - URL de ECS/EKS Load Balancer
-  # - URL de servicio en Railway, Render, Koyeb, etc.
-  # - URL de EC2 con Docker
+  # Ejemplos:
+  # - Railway: https://tu-app.railway.app
+  # - Render: https://tu-app.onrender.com
+  # - Koyeb: https://tu-app.koyeb.app
+  # - ECS: http://tu-load-balancer.us-east-1.elb.amazonaws.com
   backendUrl: ${env:BACKEND_URL, 'http://localhost:8080'}
-  
-  # Configuración de CORS
-  corsConfig:
-    origin: '*'
-    headers:
-      - Content-Type
-      - Authorization
-      - X-Amz-Date
-      - X-Api-Key
-      - X-Amz-Security-Token
-    allowCredentials: false
 
 resources:
   Resources:
-    # ==================== API GATEWAY REST API ====================
-    ApiGatewayRestApi:
-      Type: AWS::ApiGateway::RestApi
+    # ==================== HTTP API (v2) - Soporta ANY method con HTTP_PROXY ====================
+    HttpApi:
+      Type: AWS::ApiGatewayV2::Api
       Properties:
         Name: ${self:service}-${self:provider.stage}
-        Description: API Gateway para Cultural Pass - Proxy a contenedor backend
-        EndpointConfiguration:
-          Types:
-            - REGIONAL
+        Description: API Gateway HTTP API para Cultural Pass Backend
+        ProtocolType: HTTP
+        CorsConfiguration:
+          AllowOrigins:
+            - '*'
+          AllowHeaders:
+            - Content-Type
+            - Authorization
+            - X-Amz-Date
+            - X-Api-Key
+            - X-Amz-Security-Token
+          AllowMethods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - PATCH
+            - OPTIONS
+          MaxAge: 300
     
-    # ==================== ROOT RESOURCE /api ====================
-    ApiResource:
-      Type: AWS::ApiGateway::Resource
+    # ==================== INTEGRATION ====================
+    HttpApiIntegration:
+      Type: AWS::ApiGatewayV2::Integration
       Properties:
-        ParentId: !GetAtt ApiGatewayRestApi.RootResourceId
-        PathPart: api
-        RestApiId: !Ref ApiGatewayRestApi
+        ApiId: !Ref HttpApi
+        IntegrationType: HTTP_PROXY
+        IntegrationUri: ${self:custom.backendUrl}/{proxy}
+        IntegrationMethod: ANY
+        PayloadFormatVersion: '1.0'
     
-    # ==================== AUTH RESOURCES ====================
-    AuthResource:
-      Type: AWS::ApiGateway::Resource
+    # ==================== ROUTES ====================
+    # Auth Routes
+    AuthRoute:
+      Type: AWS::ApiGatewayV2::Route
       Properties:
-        ParentId: !Ref ApiResource
-        PathPart: auth
-        RestApiId: !Ref ApiGatewayRestApi
+        ApiId: !Ref HttpApi
+        RouteKey: 'ANY /api/auth/{proxy+}'
+        Target: !Sub 'integrations/${HttpApiIntegration}'
     
-    AuthProxyResource:
-      Type: AWS::ApiGateway::Resource
+    # Event Routes
+    EventRoute:
+      Type: AWS::ApiGatewayV2::Route
       Properties:
-        ParentId: !Ref AuthResource
-        PathPart: '{proxy+}'
-        RestApiId: !Ref ApiGatewayRestApi
+        ApiId: !Ref HttpApi
+        RouteKey: 'ANY /api/event/{proxy+}'
+        Target: !Sub 'integrations/${HttpApiIntegration}'
     
-    AuthMethod:
-      Type: AWS::ApiGateway::Method
+    # Token Routes
+    TokenRoute:
+      Type: AWS::ApiGatewayV2::Route
       Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref AuthProxyResource
-        HttpMethod: ANY
-        AuthorizationType: NONE
-        RequestParameters:
-          method.request.path.proxy: true
-        Integration:
-          Type: HTTP_PROXY
-          Uri: ${self:custom.backendUrl}/api/auth/{proxy}
-          RequestParameters:
-            integration.request.path.proxy: method.request.path.proxy
+        ApiId: !Ref HttpApi
+        RouteKey: 'ANY /api/token/{proxy+}'
+        Target: !Sub 'integrations/${HttpApiIntegration}'
     
-    AuthOptionsMethod:
-      Type: AWS::ApiGateway::Method
+    # User Routes
+    UserRoute:
+      Type: AWS::ApiGatewayV2::Route
       Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref AuthProxyResource
-        HttpMethod: OPTIONS
-        AuthorizationType: NONE
-        Integration:
-          Type: MOCK
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-              ResponseTemplates:
-                application/json: ''
-          RequestTemplates:
-            application/json: '{"statusCode": 200}'
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: true
-              method.response.header.Access-Control-Allow-Methods: true
-              method.response.header.Access-Control-Allow-Origin: true
+        ApiId: !Ref HttpApi
+        RouteKey: 'ANY /api/user/{proxy+}'
+        Target: !Sub 'integrations/${HttpApiIntegration}'
     
-    # ==================== EVENT RESOURCES ====================
-    EventResource:
-      Type: AWS::ApiGateway::Resource
+    # Statistics Routes
+    StatisticsRoute:
+      Type: AWS::ApiGatewayV2::Route
       Properties:
-        ParentId: !Ref ApiResource
-        PathPart: event
-        RestApiId: !Ref ApiGatewayRestApi
+        ApiId: !Ref HttpApi
+        RouteKey: 'ANY /api/statistics/{proxy+}'
+        Target: !Sub 'integrations/${HttpApiIntegration}'
     
-    EventProxyResource:
-      Type: AWS::ApiGateway::Resource
+    # ==================== STAGE ====================
+    HttpApiStage:
+      Type: AWS::ApiGatewayV2::Stage
       Properties:
-        ParentId: !Ref EventResource
-        PathPart: '{proxy+}'
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    EventMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref EventProxyResource
-        HttpMethod: ANY
-        AuthorizationType: NONE
-        RequestParameters:
-          method.request.path.proxy: true
-        Integration:
-          Type: HTTP_PROXY
-          Uri: ${self:custom.backendUrl}/api/event/{proxy}
-          RequestParameters:
-            integration.request.path.proxy: method.request.path.proxy
-    
-    EventOptionsMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref EventProxyResource
-        HttpMethod: OPTIONS
-        AuthorizationType: NONE
-        Integration:
-          Type: MOCK
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-              ResponseTemplates:
-                application/json: ''
-          RequestTemplates:
-            application/json: '{"statusCode": 200}'
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: true
-              method.response.header.Access-Control-Allow-Methods: true
-              method.response.header.Access-Control-Allow-Origin: true
-    
-    # ==================== TOKEN RESOURCES ====================
-    TokenResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref ApiResource
-        PathPart: token
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    TokenProxyResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref TokenResource
-        PathPart: '{proxy+}'
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    TokenMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref TokenProxyResource
-        HttpMethod: ANY
-        AuthorizationType: NONE
-        RequestParameters:
-          method.request.path.proxy: true
-        Integration:
-          Type: HTTP_PROXY
-          Uri: ${self:custom.backendUrl}/api/token/{proxy}
-          RequestParameters:
-            integration.request.path.proxy: method.request.path.proxy
-    
-    TokenOptionsMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref TokenProxyResource
-        HttpMethod: OPTIONS
-        AuthorizationType: NONE
-        Integration:
-          Type: MOCK
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-              ResponseTemplates:
-                application/json: ''
-          RequestTemplates:
-            application/json: '{"statusCode": 200}'
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: true
-              method.response.header.Access-Control-Allow-Methods: true
-              method.response.header.Access-Control-Allow-Origin: true
-    
-    # ==================== USER RESOURCES ====================
-    UserResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref ApiResource
-        PathPart: user
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    UserProxyResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref UserResource
-        PathPart: '{proxy+}'
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    UserMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref UserProxyResource
-        HttpMethod: ANY
-        AuthorizationType: NONE
-        RequestParameters:
-          method.request.path.proxy: true
-        Integration:
-          Type: HTTP_PROXY
-          Uri: ${self:custom.backendUrl}/api/user/{proxy}
-          RequestParameters:
-            integration.request.path.proxy: method.request.path.proxy
-    
-    UserOptionsMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref UserProxyResource
-        HttpMethod: OPTIONS
-        AuthorizationType: NONE
-        Integration:
-          Type: MOCK
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-              ResponseTemplates:
-                application/json: ''
-          RequestTemplates:
-            application/json: '{"statusCode": 200}'
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: true
-              method.response.header.Access-Control-Allow-Methods: true
-              method.response.header.Access-Control-Allow-Origin: true
-    
-    # ==================== STATISTICS RESOURCES ====================
-    StatisticsResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref ApiResource
-        PathPart: statistics
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    StatisticsProxyResource:
-      Type: AWS::ApiGateway::Resource
-      Properties:
-        ParentId: !Ref StatisticsResource
-        PathPart: '{proxy+}'
-        RestApiId: !Ref ApiGatewayRestApi
-    
-    StatisticsMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref StatisticsProxyResource
-        HttpMethod: ANY
-        AuthorizationType: NONE
-        RequestParameters:
-          method.request.path.proxy: true
-        Integration:
-          Type: HTTP_PROXY
-          Uri: ${self:custom.backendUrl}/api/statistics/{proxy}
-          RequestParameters:
-            integration.request.path.proxy: method.request.path.proxy
-    
-    StatisticsOptionsMethod:
-      Type: AWS::ApiGateway::Method
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
-        ResourceId: !Ref StatisticsProxyResource
-        HttpMethod: OPTIONS
-        AuthorizationType: NONE
-        Integration:
-          Type: MOCK
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
-                method.response.header.Access-Control-Allow-Methods: "'GET,POST,PUT,DELETE,OPTIONS'"
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-              ResponseTemplates:
-                application/json: ''
-          RequestTemplates:
-            application/json: '{"statusCode": 200}'
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Headers: true
-              method.response.header.Access-Control-Allow-Methods: true
-              method.response.header.Access-Control-Allow-Origin: true
-    
-    # ==================== DEPLOYMENT ====================
-    ApiGatewayDeployment:
-      Type: AWS::ApiGateway::Deployment
-      DependsOn:
-        - AuthMethod
-        - AuthOptionsMethod
-        - EventMethod
-        - EventOptionsMethod
-        - TokenMethod
-        - TokenOptionsMethod
-        - UserMethod
-        - UserOptionsMethod
-        - StatisticsMethod
-        - StatisticsOptionsMethod
-      Properties:
-        RestApiId: !Ref ApiGatewayRestApi
+        ApiId: !Ref HttpApi
         StageName: ${self:provider.stage}
-        StageDescription:
-          Description: ${self:provider.stage} stage
-          LoggingLevel: INFO
-          DataTraceEnabled: true
-          MetricsEnabled: true
+        Description: ${self:provider.stage} stage
+        AutoDeploy: true
+        DefaultRouteSettings:
+          DetailedMetricsEnabled: true
+          ThrottlingBurstLimit: 5000
+          ThrottlingRateLimit: 10000
+        AccessLogSettings:
+          DestinationArn: !GetAtt ApiLogGroup.Arn
+          Format: $context.requestId $context.error.message $context.error.messageString
+    
+    # ==================== CLOUDWATCH LOGS ====================
+    ApiLogGroup:
+      Type: AWS::Logs::LogGroup
+      Properties:
+        LogGroupName: /aws/apigateway/${self:service}-${self:provider.stage}
+        RetentionInDays: 7
 
   # ==================== OUTPUTS ====================
   Outputs:
-    ApiGatewayUrl:
-      Description: URL del API Gateway
-      Value: !Sub 'https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${self:provider.stage}'
+    HttpApiUrl:
+      Description: URL del HTTP API Gateway
+      Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${self:provider.stage}'
       Export:
         Name: ${self:service}-${self:provider.stage}-api-url
     
-    RestApiId:
-      Description: ID del API Gateway REST API
-      Value: !Ref ApiGatewayRestApi
+    HttpApiId:
+      Description: ID del HTTP API
+      Value: !Ref HttpApi
       Export:
-        Name: ${self:service}-${self:provider.stage}-rest-api-id
+        Name: ${self:service}-${self:provider.stage}-http-api-id
