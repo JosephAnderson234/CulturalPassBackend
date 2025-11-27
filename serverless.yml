@@ -48,7 +48,7 @@ resources:
       Properties:
         ApiId: !Ref HttpApi
         IntegrationType: HTTP_PROXY
-        IntegrationUri: ${self:custom.backendUrl}/{proxy}
+        IntegrationUri: ${self:custom.backendUrl}
         IntegrationMethod: ANY
         PayloadFormatVersion: '1.0'
     
