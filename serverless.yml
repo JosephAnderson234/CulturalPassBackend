@@ -76,19 +76,9 @@ resources:
           method.request.path.proxy: true
         Integration:
           Type: HTTP_PROXY
-          IntegrationHttpMethod: ANY
           Uri: ${self:custom.backendUrl}/api/auth/{proxy}
           RequestParameters:
             integration.request.path.proxy: method.request.path.proxy
-          PassthroughBehavior: WHEN_NO_MATCH
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin: true
     
     AuthOptionsMethod:
       Type: AWS::ApiGateway::Method
@@ -142,19 +132,9 @@ resources:
           method.request.path.proxy: true
         Integration:
           Type: HTTP_PROXY
-          IntegrationHttpMethod: ANY
           Uri: ${self:custom.backendUrl}/api/event/{proxy}
           RequestParameters:
             integration.request.path.proxy: method.request.path.proxy
-          PassthroughBehavior: WHEN_NO_MATCH
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin: true
     
     EventOptionsMethod:
       Type: AWS::ApiGateway::Method
@@ -208,19 +188,9 @@ resources:
           method.request.path.proxy: true
         Integration:
           Type: HTTP_PROXY
-          IntegrationHttpMethod: ANY
           Uri: ${self:custom.backendUrl}/api/token/{proxy}
           RequestParameters:
             integration.request.path.proxy: method.request.path.proxy
-          PassthroughBehavior: WHEN_NO_MATCH
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin: true
     
     TokenOptionsMethod:
       Type: AWS::ApiGateway::Method
@@ -274,19 +244,9 @@ resources:
           method.request.path.proxy: true
         Integration:
           Type: HTTP_PROXY
-          IntegrationHttpMethod: ANY
           Uri: ${self:custom.backendUrl}/api/user/{proxy}
           RequestParameters:
             integration.request.path.proxy: method.request.path.proxy
-          PassthroughBehavior: WHEN_NO_MATCH
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin: true
     
     UserOptionsMethod:
       Type: AWS::ApiGateway::Method
@@ -340,19 +300,9 @@ resources:
           method.request.path.proxy: true
         Integration:
           Type: HTTP_PROXY
-          IntegrationHttpMethod: ANY
           Uri: ${self:custom.backendUrl}/api/statistics/{proxy}
           RequestParameters:
             integration.request.path.proxy: method.request.path.proxy
-          PassthroughBehavior: WHEN_NO_MATCH
-          IntegrationResponses:
-            - StatusCode: 200
-              ResponseParameters:
-                method.response.header.Access-Control-Allow-Origin: "'*'"
-        MethodResponses:
-          - StatusCode: 200
-            ResponseParameters:
-              method.response.header.Access-Control-Allow-Origin: true
     
     StatisticsOptionsMethod:
       Type: AWS::ApiGateway::Method
